@@ -1,0 +1,156 @@
+https://chatgpt.com/share/6adb54fc-9ac4-83ee-92e9-05e3aa831415
+
+Step 1: Install and start Docker
+Install Docker Desktop on Windows or macOS, or Docker Engine on a supported Linux system. Ensure the Docker service is running.
+
+Check the installed version:
+docker --version
+
+
+Example output:
+Docker version 27.x.x
+
+
+The version number depends on the installed Docker release.
+
+Check whether Docker is running correctly:
+docker info
+
+
+Explanation: docker --version displays the CLI version, while docker info displays information about the Docker Engine. If the daemon is not running, start Docker before continuing.
+Step 2: Download a Docker image
+docker pull nginx:latest
+
+
+Explanation:
+- docker pull downloads an image from a container registry.
+- nginx is the name of the web server image.
+- latest is the image tag.
+Docker downloads the image layers and stores the image locally.
+
+Verify the downloaded image:
+docker images
+
+
+Example output:
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+nginx        latest    abc123...      ...           ...
+
+
+The actual image ID, creation time and size will vary.
+Step 3: Create and run a container
+docker run -d --name mynginx -p 8080:80 nginx:latest
+
+
+This is the main command for creating and starting the container.
+
+Explanation of each part:
+Command or option	Meaning
+docker run	Creates and starts a container from an image
+-d	Runs the container in detached mode, in the background
+--name mynginx	Assigns the container the name mynginx
+-p 8080:80	Maps host port 8080 to container port 80
+nginx:latest	Specifies the image used to create the container
+
+Understanding port mapping
+- Host port: 8080
+- Container port: 80
+When a browser sends a request to localhost:8080, Docker forwards the request to port 80 inside the Nginx container.
+
+If the image is not available locally, Docker will generally attempt to pull it automatically.
+Step 4: Check the running container
+docker ps
+
+
+This command lists currently running containers.
+
+Example output:
+CONTAINER ID   IMAGE          COMMAND   STATUS         PORTS
+abc123         nginx:latest   ...       Up ...         0.0.0.0:8080->80/tcp
+
+
+The output confirms that the container is running and the host port is mapped.
+
+To list both running and stopped containers:
+docker ps -a
+
+
+Step 5: Test the application
+Open the following URL in your browser:
+http://localhost:8080Alternatively, use the terminal:
+curl http://localhost:8080
+
+
+Nginx should return its default welcome page HTML. This verifies that the web server is running and accessible through the mapped port.
+Step 6: View container logs
+docker logs mynginx
+
+
+This displays the container's standard output and error logs, which can help identify startup problems or other issues.
+
+To follow new log entries continuously:
+docker logs -f mynginx
+
+
+Press Ctrl+C to stop following the logs. This does not stop the container.
+Step 7: Stop the container
+docker stop mynginx
+
+
+This gracefully stops the running container.
+
+Verify:
+docker ps -a
+
+
+The container should appear with a status such as Exited.
+Step 8: Restart the container
+docker start mynginx
+
+
+This starts the existing stopped container again. It does not create a new container.
+Step 9: Remove the container
+First, stop it if it is running:
+docker stop mynginx
+docker rm mynginx
+
+
+docker rm removes the container, but the downloaded image remains on the machine.
+
+To remove the image as well, after no containers are using it:
+docker rmi nginx:latest
+
+
+5. Complete command sequence for the exam
+You can write the following commands together as the practical procedure.
+# 1. Check Docker
+docker --version
+docker info
+
+# 2. Pull the image
+docker pull nginx:latest
+
+# 3. Verify the image
+docker images
+
+# 4. Create and run the container
+docker run -d --name mynginx -p 8080:80 nginx:latest
+
+# 5. Check the running container
+docker ps
+
+# 6. Test the application
+curl http://localhost:8080
+
+# 7. View logs
+docker logs mynginx
+
+# 8. Stop the container
+docker stop mynginx
+
+# 9. Restart the container
+docker start mynginx
+
+# 10. Remove the container
+docker stop mynginx
+docker rm mynginx

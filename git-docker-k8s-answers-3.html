@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git, Docker and Kubernetes: Lab Answers</title>
+<style>
+:root{
+  --bg:#f3f6f9; --surface:#ffffff; --ink:#16212c; --muted:#556575; --line:#d6dee6;
+  --accent:#0b6e8a; --code-bg:#eef2f6; --out-bg:#f7f9fb; --note:#e6f2f6; --warn:#b45309;
+  --c:#66788a; --s:#0a7d4b; --k:#8e3bb0; --f:#b45309; --u:#0b6e8a; --n:#b45309; --a:#0b6e8a; --t:#1d5fbf;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
+  --sans:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+:root[data-theme="dark"]{
+  --bg:#0d1218; --surface:#131a22; --ink:#dfe6ee; --muted:#8a9aab; --line:#243040;
+  --accent:#4cc2e0; --code-bg:#0a0f15; --out-bg:#0f161d; --note:#112431; --warn:#f0b866;
+  --c:#6f8196; --s:#7fd99a; --k:#c792ea; --f:#f0b866; --u:#6cc7e6; --n:#f0b866; --a:#6cc7e6; --t:#82aaff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+header h1{font-size:1.05rem;margin:0;font-weight:650}
+button.theme{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+  padding:6px 12px;border-radius:999px;cursor:pointer}
+button.theme:hover{border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.layout{max-width:1120px;margin:0 auto;padding:20px 16px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px}
+nav.toc{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 96px);overflow:auto;font-size:.88rem}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 10px;border-left:2px solid var(--line)}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+main{min-width:0}
+.intro{background:var(--note);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin-bottom:24px}
+.intro p{margin:.3em 0}
+section.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin-bottom:22px}
+section.q h2{margin:0 0 10px;font-size:1.2rem;line-height:1.35}
+section.q h2 span.n{display:inline-block;min-width:2.1em;color:var(--accent)}
+.ask{margin:0 0 14px;padding:8px 14px;border-left:3px solid var(--accent);color:var(--muted);font-style:italic}
+h3{font-size:1rem;margin:22px 0 6px}
+h4{font-size:.92rem;margin:14px 0 4px;color:var(--muted);font-weight:600}
+p,li{max-width:76ch}
+ul,ol{padding-left:1.3em}
+code.i{font-family:var(--mono);font-size:.88em;background:var(--code-bg);padding:1px 6px;border-radius:4px}
+.codebox{margin:10px 0 8px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--code-bg)}
+.codebox.out{background:var(--out-bg);border-style:dashed;margin-bottom:16px}
+.codebar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+.codebar .l{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:.74rem;background:var(--surface)}
+.pill.mem{color:var(--accent);border-color:var(--accent)}
+.pill.dl{color:var(--muted)}
+.codebar button{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:2px 10px;border-radius:4px;cursor:pointer}
+.codebar button:hover{border-color:var(--accent)}
+pre{margin:0;padding:12px 14px;overflow-x:auto;font:.85rem/1.55 var(--mono);tab-size:2}
+.out pre{color:var(--muted)}
+pre code{font:inherit}
+.tk-c{color:var(--c);font-style:italic}.tk-s{color:var(--s)}.tk-k{color:var(--k);font-weight:600}
+.tk-f{color:var(--f)}.tk-u{color:var(--u);text-decoration:underline}.tk-n{color:var(--n)}
+.tk-a{color:var(--a)}.tk-t{color:var(--t)}
+.out .tk-a{color:var(--ink);font-weight:600}
+dl.flags{display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:4px 16px;margin:6px 0 10px;font-size:.92rem;
+  border:1px solid var(--line);border-radius:6px;padding:10px 14px}
+dl.flags dt{margin:0}
+dl.flags dd{margin:0;max-width:none}
+.tablewrap{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--code-bg)}
+.warn{background:var(--note);border-left:3px solid var(--warn);padding:8px 14px;border-radius:4px;margin:12px 0}
+.tip{background:var(--note);border-left:3px solid var(--accent);padding:8px 14px;border-radius:4px;margin:12px 0}
+@media (max-width:820px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static;display:flex;gap:6px;overflow-x:auto;max-height:none;padding-bottom:6px}
+  nav.toc a{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+  section.q{padding:16px}
+  dl.flags{grid-template-columns:1fr}
+  dl.flags dd{margin-bottom:6px}
+}
+@media print{header,nav.toc,.codebar button{display:none}.layout{display:block}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Git, Docker and Kubernetes: Lab Answers</h1>
+  <button class="theme" id="themeBtn" type="button" aria-label="Toggle dark and light theme">Dark mode</button>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Questions">
+  <a href="#setup">Setup steps</a>
+  <a href="#q1">1. Create repo, push</a>
+  <a href="#q2">2. Local file, push</a>
+  <a href="#q3">3. GitHub file, pull</a>
+  <a href="#q4">4. File on main</a>
+  <a href="#q5">5. File on branch-1</a>
+  <a href="#q6">6. Merge</a>
+  <a href="#q7">7. Docker container</a>
+  <a href="#q8">8. Pull latest image</a>
+  <a href="#q9">9. Postgres, whoami, curl</a>
+  <a href="#q10">10. HTTP verbs</a>
+  <a href="#q11">11. Express microservice</a>
+  <a href="#q12">12. Dockerfile, simple-api</a>
+  <a href="#q13">13. K8s commands, 9B</a>
+</nav>
+
+<main>
+<div class="intro">
+  <p><strong>How to read this page.</strong> Each command block is followed by the meaning of its flags and an example of the output (dashed box). IDs, hashes, sizes, versions and times in outputs will differ on your machine. Replace <code class="i">YOUR_USER</code> and <code class="i">YOUR_REPO</code> with your own names.</p>
+  <p>Code blocks carry a tag: <span class="pill mem">memorise</span> means you may have to write it yourself, and it is kept to the bare minimum that runs. Files with no tag are given to you in the question (downloaded), so don't memorise them.</p>
+</div>
+
+<div class="intro">
+  <p><strong>What you actually need to memorise</strong></p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Question</th><th>Memorise</th></tr>
+    <tr><td>1 to 6 (Git)</td><td>Only the commands.</td></tr>
+    <tr><td>7 to 9 (Docker)</td><td>Only the <code class="i">docker</code> commands. No files.</td></tr>
+    <tr><td>11 (Express microservice)</td><td><code class="i">index.js</code> (about 25 lines), a 7-line <code class="i">Dockerfile</code>, <code class="i">deployment.yml</code> (12 lines), <code class="i">service.yml</code> (9 lines).</td></tr>
+    <tr><td>12 (simple-api)</td><td>Nothing. The compose file is downloaded. Only if asked to explain a Dockerfile for it: the 4-line Spring Boot Dockerfile in Q12.</td></tr>
+    <tr><td>13 and 9B (Kubernetes)</td><td>The <code class="i">kubectl</code> commands. In 9B all three YAML files are downloaded. The only YAML to know is the 7-line Pod.</td></tr>
+  </table>
+  </div>
+  <p><strong>Exam shortcut:</strong> you can generate any Kubernetes YAML instead of remembering it. See the <code class="i">--dry-run=client -o yaml</code> trick in Q13.</p>
+</div>
+
+<!-- ============ SETUP ============ -->
+<section class="q" id="setup">
+<h2>Setup steps (do once)</h2>
+<ol>
+  <li><strong>Git:</strong> install from git-scm.com. On Windows use the default options and use <em>Git Bash</em> as your terminal.</li>
+  <li><strong>GitHub:</strong> create an account. For pushing, create a token: <em>Settings, Developer settings, Personal access tokens, Tokens (classic), Generate new token</em>, tick <code class="i">repo</code>, copy it. When <code class="i">git push</code> asks for a password, paste the token. (Git for Windows may instead open a browser sign-in window; that works too.)</li>
+  <li><strong>Docker Desktop:</strong> install, start it, wait until it says <em>Engine running</em>. Then open <em>Settings, Kubernetes, Enable Kubernetes</em>, click <em>Apply &amp; restart</em> and wait for the Kubernetes indicator to turn green. This also installs <code class="i">kubectl</code>.</li>
+  <li><strong>Node.js:</strong> install the LTS version from nodejs.org (needed for the Express service in Q11).</li>
+  <li><strong>Postman:</strong> install from postman.com/downloads. You can skip sign-in and use the lightweight client.</li>
+</ol>
+<h4>Verify everything</h4>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal" data-tag="">
+git --version
+docker --version
+docker run hello-world
+node -v
+npm -v
+kubectl version --client
+kubectl get nodes
+</script>
+<dl class="flags">
+  <dt><code>--version</code></dt><dd>Prints the installed version and exits.</dd>
+  <dt><code>run hello-world</code></dt><dd>Downloads a tiny test image, runs it once, prints a message, exits. Proves Docker can pull and run.</dd>
+  <dt><code>--client</code></dt><dd>Show only the kubectl version, without contacting the cluster.</dd>
+  <dt><code>get nodes</code></dt><dd>Lists the machines in the Kubernetes cluster. Proves the cluster is up.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output (versions will differ)">
+$ git --version
+git version 2.45.1.windows.1
+$ docker --version
+Docker version 27.0.3, build 7d4bcd8
+$ docker run hello-world
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+$ node -v
+v20.15.0
+$ npm -v
+10.7.0
+$ kubectl version --client
+Client Version: v1.30.2
+$ kubectl get nodes
+NAME             STATUS   ROLES           AGE   VERSION
+docker-desktop   Ready    control-plane   5m    v1.30.2
+</script>
+<div class="tip">Using minikube instead of Docker Desktop Kubernetes? Run <code class="i">minikube start</code> and then <code class="i">kubectl get nodes</code> should show a node named <code class="i">minikube</code> as <code class="i">Ready</code>.</div>
+</section>
+
+<!-- ============ Q1 ============ -->
+<section class="q" id="q1">
+<h2><span class="n">1.</span>Create a fresh Git repository, store files locally and push to GitHub</h2>
+<p class="ask">Explain the process of creating a fresh git repository and store files locally and in GitHub along with commands.</p>
+<p>Git tracks changes in a local repository. GitHub hosts a remote copy. You create the local repository, commit files, create an empty repository on GitHub, link the two with a remote, and push.</p>
+<ol>
+  <li>Install Git and set your identity once.</li>
+  <li>Create a folder and run <code class="i">git init</code>.</li>
+  <li>Add files, stage them (<code class="i">git add</code>) and save a snapshot (<code class="i">git commit</code>).</li>
+  <li>On github.com click <em>New repository</em>, name it, and leave it empty (no README).</li>
+  <li>Connect the remote and push.</li>
+</ol>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+
+mkdir my-repo
+cd my-repo
+git init
+
+echo "Hello Git" > readme.txt
+git status
+git add readme.txt
+git commit -m "Initial commit"
+
+git branch -M main
+git remote add origin https://github.com/YOUR_USER/YOUR_REPO.git
+git remote -v
+git push -u origin main
+</script>
+<dl class="flags">
+  <dt><code>--global</code></dt><dd>Save the setting for your user account, so it applies to every repository. Without it, it applies to this repository only.</dd>
+  <dt><code>git init</code></dt><dd>Turns the current folder into a repository by creating a hidden <code class="i">.git</code> folder.</dd>
+  <dt><code>git status</code></dt><dd>Shows which files are untracked, modified or staged.</dd>
+  <dt><code>git add &lt;file&gt;</code></dt><dd>Moves the file into the staging area (the next commit).</dd>
+  <dt><code>-m "text"</code></dt><dd>Commit message given inline. Without it Git opens an editor.</dd>
+  <dt><code>branch -M main</code></dt><dd>Rename the current branch to <code class="i">main</code>. <code class="i">-M</code> is move/rename with force.</dd>
+  <dt><code>remote add origin URL</code></dt><dd>Registers the GitHub URL under the nickname <code class="i">origin</code>.</dd>
+  <dt><code>remote -v</code></dt><dd>Verbose list of remotes with their fetch and push URLs.</dd>
+  <dt><code>push -u origin main</code></dt><dd>Upload branch <code class="i">main</code> to <code class="i">origin</code>. <code class="i">-u</code> remembers this link, so later you can type just <code class="i">git push</code> or <code class="i">git pull</code>.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git init
+Initialized empty Git repository in C:/Users/you/my-repo/.git/
+$ git status
+On branch master
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        readme.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+$ git add readme.txt
+$ git commit -m "Initial commit"
+[master (root-commit) 3f2a1b7] Initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 readme.txt
+$ git remote -v
+origin  https://github.com/YOUR_USER/YOUR_REPO.git (fetch)
+origin  https://github.com/YOUR_USER/YOUR_REPO.git (push)
+$ git push -u origin main
+Enumerating objects: 3, done.
+Counting objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 214 bytes | 214.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+To https://github.com/YOUR_USER/YOUR_REPO.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+</script>
+<p><code class="i">git add</code>, <code class="i">git branch -M</code> and <code class="i">git remote add</code> print nothing when they succeed. If your Git is configured with <code class="i">main</code> as the default, <code class="i">git status</code> says <code class="i">On branch main</code>.</p>
+</section>
+
+<!-- ============ Q2 ============ -->
+<section class="q" id="q2">
+<h2><span class="n">2.</span>Create a text file locally and push it to GitHub</h2>
+<p class="ask">Create one text file in local machine and save it in local repository, push it to GitHub.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+cd my-repo
+echo "This file was created on my local machine" > local-file.txt
+
+git add local-file.txt
+git commit -m "Add local-file.txt"
+git push origin main
+
+git log --oneline
+git status
+</script>
+<dl class="flags">
+  <dt><code>&gt;</code></dt><dd>Shell redirect: writes the text from <code class="i">echo</code> into the file (creates or overwrites it).</dd>
+  <dt><code>push origin main</code></dt><dd>Send local commits on <code class="i">main</code> to the remote <code class="i">origin</code>.</dd>
+  <dt><code>log --oneline</code></dt><dd>Commit history, one line per commit (short hash and message).</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git commit -m "Add local-file.txt"
+[main 9c1d4e2] Add local-file.txt
+ 1 file changed, 1 insertion(+)
+ create mode 100644 local-file.txt
+$ git push origin main
+Enumerating objects: 4, done.
+Writing objects: 100% (3/3), 301 bytes | 301.00 KiB/s, done.
+To https://github.com/YOUR_USER/YOUR_REPO.git
+   3f2a1b7..9c1d4e2  main -> main
+$ git log --oneline
+9c1d4e2 (HEAD -> main, origin/main) Add local-file.txt
+3f2a1b7 Initial commit
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+</script>
+<p>Refresh the repository page on GitHub and <code class="i">local-file.txt</code> is listed.</p>
+</section>
+
+<!-- ============ Q3 ============ -->
+<section class="q" id="q3">
+<h2><span class="n">3.</span>Create a text file in GitHub and pull it to the local repository</h2>
+<p class="ask">Create another text file in GitHub and pull it into local repository.</p>
+<ol>
+  <li>On GitHub open the repository, click <em>Add file</em>, then <em>Create new file</em>.</li>
+  <li>Name it <code class="i">github-file.txt</code>, type some text, click <em>Commit changes</em> and commit to <code class="i">main</code>.</li>
+  <li>In the terminal pull the change.</li>
+</ol>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+cd my-repo
+git pull origin main
+ls
+cat github-file.txt
+</script>
+<dl class="flags">
+  <dt><code>git pull origin main</code></dt><dd>Downloads new commits from <code class="i">main</code> on <code class="i">origin</code> (fetch) and merges them into your current branch.</dd>
+  <dt><code>ls</code></dt><dd>Lists files. Use <code class="i">dir</code> in Windows CMD.</dd>
+  <dt><code>cat file</code></dt><dd>Prints the file contents.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git pull origin main
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 987 bytes | 98.00 KiB/s, done.
+From https://github.com/YOUR_USER/YOUR_REPO
+ * branch            main       -> FETCH_HEAD
+   9c1d4e2..b7e5a60  main       -> origin/main
+Updating 9c1d4e2..b7e5a60
+Fast-forward
+ github-file.txt | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 github-file.txt
+$ ls
+github-file.txt  local-file.txt  readme.txt
+$ cat github-file.txt
+Created on GitHub
+</script>
+<p><em>Fast-forward</em> means your branch had no new commits of its own, so Git just moved it forward to match GitHub.</p>
+</section>
+
+<!-- ============ Q4 ============ -->
+<section class="q" id="q4">
+<h2><span class="n">4.</span>Create a text file in the main branch and save it in the local repository</h2>
+<p class="ask">Create one text file in main branch and save it in local repository.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+git checkout main
+git branch
+
+echo "File created on the main branch" > main-file.txt
+git add main-file.txt
+git commit -m "Add main-file.txt on main"
+git push origin main
+</script>
+<dl class="flags">
+  <dt><code>git checkout main</code></dt><dd>Switch to branch <code class="i">main</code> (newer equivalent: <code class="i">git switch main</code>).</dd>
+  <dt><code>git branch</code></dt><dd>Lists local branches. The <code class="i">*</code> marks the current one.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git checkout main
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+$ git branch
+* main
+$ git commit -m "Add main-file.txt on main"
+[main 4d8f0c3] Add main-file.txt on main
+ 1 file changed, 1 insertion(+)
+ create mode 100644 main-file.txt
+$ git push origin main
+To https://github.com/YOUR_USER/YOUR_REPO.git
+   b7e5a60..4d8f0c3  main -> main
+</script>
+</section>
+
+<!-- ============ Q5 ============ -->
+<section class="q" id="q5">
+<h2><span class="n">5.</span>Create a text file in "branch-1" and save it in the local repository</h2>
+<p class="ask">Create another text file in "branch-1" branch and save it local repository.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+git checkout -b branch-1
+
+echo "File created on branch-1" > branch1-file.txt
+git add branch1-file.txt
+git commit -m "Add branch1-file.txt on branch-1"
+
+git push -u origin branch-1
+git branch -a
+</script>
+<dl class="flags">
+  <dt><code>checkout -b</code></dt><dd>Create a new branch and switch to it in one step (<code class="i">git switch -c branch-1</code> does the same).</dd>
+  <dt><code>push -u origin branch-1</code></dt><dd>Publish the new branch to GitHub and set it to track the remote branch.</dd>
+  <dt><code>branch -a</code></dt><dd>Lists all branches, local and remote (<code class="i">remotes/origin/...</code>).</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git checkout -b branch-1
+Switched to a new branch 'branch-1'
+$ git commit -m "Add branch1-file.txt on branch-1"
+[branch-1 e21a9b8] Add branch1-file.txt on branch-1
+ 1 file changed, 1 insertion(+)
+ create mode 100644 branch1-file.txt
+$ git push -u origin branch-1
+remote: Create a pull request for 'branch-1' on GitHub by visiting:
+remote:      https://github.com/YOUR_USER/YOUR_REPO/pull/new/branch-1
+To https://github.com/YOUR_USER/YOUR_REPO.git
+ * [new branch]      branch-1 -> branch-1
+branch 'branch-1' set up to track 'origin/branch-1'.
+$ git branch -a
+* branch-1
+  main
+  remotes/origin/branch-1
+  remotes/origin/main
+</script>
+</section>
+
+<!-- ============ Q6 ============ -->
+<section class="q" id="q6">
+<h2><span class="n">6.</span>Merge both files into main, locally and in GitHub</h2>
+<p class="ask">Merge these two files into main branch and do the same in GitHub.</p>
+<h3>Locally</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+git checkout main
+git pull origin main
+git merge branch-1
+git push origin main
+
+ls
+git log --oneline --graph --all
+</script>
+<dl class="flags">
+  <dt><code>git merge branch-1</code></dt><dd>Brings the commits of <code class="i">branch-1</code> into the branch you are on (<code class="i">main</code>). Add <code class="i">--no-ff</code> to force a separate merge commit.</dd>
+  <dt><code>--graph</code></dt><dd>Draws the branch structure as ASCII art.</dd>
+  <dt><code>--all</code></dt><dd>Include all branches, not just the current one.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ git checkout main
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+$ git merge branch-1
+Updating 4d8f0c3..e21a9b8
+Fast-forward
+ branch1-file.txt | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 branch1-file.txt
+$ git push origin main
+To https://github.com/YOUR_USER/YOUR_REPO.git
+   4d8f0c3..e21a9b8  main -> main
+$ ls
+branch1-file.txt  github-file.txt  local-file.txt  main-file.txt  readme.txt
+$ git log --oneline --graph --all
+* e21a9b8 (HEAD -> main, origin/main, origin/branch-1, branch-1) Add branch1-file.txt on branch-1
+* 4d8f0c3 Add main-file.txt on main
+* b7e5a60 Create github-file.txt
+* 9c1d4e2 Add local-file.txt
+* 3f2a1b7 Initial commit
+</script>
+<p>It is a fast-forward because <code class="i">main</code> had no new commits after <code class="i">branch-1</code> was created. If both branches had changed, Git would instead print <code class="i">Merge made by the 'ort' strategy.</code> and create a merge commit. If two branches edited the same lines you get <code class="i">CONFLICT</code>: edit the file, delete the <code class="i">&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> / <code class="i">=======</code> / <code class="i">&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> markers, then <code class="i">git add .</code> and <code class="i">git commit</code>.</p>
+<h3>In GitHub (pull request)</h3>
+<ol>
+  <li>Open the repository, click <em>Pull requests</em>, then <em>New pull request</em>.</li>
+  <li>Set base to <code class="i">main</code> and compare to <code class="i">branch-1</code>.</li>
+  <li>Click <em>Create pull request</em>, then <em>Merge pull request</em>, then <em>Confirm merge</em>.</li>
+  <li>Locally run <code class="i">git checkout main</code> and <code class="i">git pull origin main</code>. Expected: a <code class="i">Fast-forward</code> or merge message listing <code class="i">branch1-file.txt</code>.</li>
+</ol>
+<div class="warn">The local merge and the GitHub merge give the same result. If you already pushed the local merge, GitHub will say there is nothing to compare. To demonstrate the GitHub merge, do it first (before the local <code class="i">git push origin main</code>), then <code class="i">git pull</code>.</div>
+</section>
+
+<!-- ============ Q7 ============ -->
+<section class="q" id="q7">
+<h2><span class="n">7.</span>Create a Docker container from an image</h2>
+<p class="ask">Explain the process of creating a Docker Container using ... (the end of this question is cut off in the photo).</p>
+<p>A Docker <strong>image</strong> is a read-only template. A <strong>container</strong> is a running instance of that image. The flow is: get the image, create and start a container, inspect it, then stop and remove it.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker pull nginx:latest
+docker run -d --name my-nginx -p 8080:80 nginx:latest
+docker ps
+docker logs my-nginx
+curl http://localhost:8080
+docker exec -it my-nginx bash
+docker stop my-nginx
+docker start my-nginx
+docker rm -f my-nginx
+docker rmi nginx:latest
+</script>
+<dl class="flags">
+  <dt><code>docker pull image:tag</code></dt><dd>Download an image from Docker Hub.</dd>
+  <dt><code>-d</code></dt><dd>Detached: run in the background and give the terminal back.</dd>
+  <dt><code>--name my-nginx</code></dt><dd>Give the container a name instead of a random one.</dd>
+  <dt><code>-p 8080:80</code></dt><dd>Publish a port as <code class="i">hostPort:containerPort</code>. Requests to your machine's 8080 go to port 80 inside the container.</dd>
+  <dt><code>docker ps</code></dt><dd>List running containers. Add <code class="i">-a</code> to include stopped ones.</dd>
+  <dt><code>docker logs</code></dt><dd>Print what the container wrote to stdout/stderr. Add <code class="i">-f</code> to follow live.</dd>
+  <dt><code>exec -it</code></dt><dd>Run a command inside a running container. <code class="i">-i</code> keeps input open, <code class="i">-t</code> gives a terminal. Type <code class="i">exit</code> to leave.</dd>
+  <dt><code>stop / start</code></dt><dd>Stop or restart the container without deleting it.</dd>
+  <dt><code>rm -f</code></dt><dd>Delete the container. <code class="i">-f</code> force-removes it even if running.</dd>
+  <dt><code>rmi</code></dt><dd>Delete an image (only possible when no container uses it).</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ docker pull nginx:latest
+latest: Pulling from library/nginx
+a2318d6c47ec: Pull complete
+Digest: sha256:9c367186df9a6b18c6735357b8eb7f407347e84aea09beb184961cb83543d...
+Status: Downloaded newer image for nginx:latest
+docker.io/library/nginx:latest
+$ docker run -d --name my-nginx -p 8080:80 nginx:latest
+7d3c1f0a9b2e4c6d8e5f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d
+$ docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                  NAMES
+7d3c1f0a9b2e   nginx:latest   "/docker-entrypoint.…"   10 seconds ago   Up 9 seconds    0.0.0.0:8080->80/tcp   my-nginx
+$ docker logs my-nginx
+/docker-entrypoint.sh: Configuration complete; ready for start up
+$ curl http://localhost:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+...
+$ docker exec -it my-nginx bash
+root@7d3c1f0a9b2e:/#
+$ docker stop my-nginx
+my-nginx
+$ docker rm -f my-nginx
+my-nginx
+$ docker rmi nginx:latest
+Untagged: nginx:latest
+Deleted: sha256:5ef79149e0ec84a7a9f9284c3f91aa3c20608f8391f5445eabe92ef07dbda03c
+</script>
+</section>
+
+<!-- ============ Q8 ============ -->
+<section class="q" id="q8">
+<h2><span class="n">8.</span>Pull the "latest" Docker image</h2>
+<p class="ask">Write docker commands to pull "latest" docker image for ... (cut off in the photo).</p>
+<p>Syntax: <code class="i">docker pull &lt;image&gt;:latest</code>. If you leave off the tag, Docker uses <code class="i">latest</code>. These are the images used in this sheet:</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker pull postgres:latest
+docker pull traefik/whoami:latest
+docker pull jkaninda/simple-api:latest
+docker pull ssatyab/studentmarkservice:latest
+
+docker images
+docker image ls postgres
+</script>
+<dl class="flags">
+  <dt><code>postgres</code></dt><dd>Official image (no username prefix).</dd>
+  <dt><code>traefik/whoami</code></dt><dd>User or organisation image: <code class="i">owner/name</code>.</dd>
+  <dt><code>:latest</code></dt><dd>The tag (version label). <code class="i">latest</code> is the default tag, not always the newest release.</dd>
+  <dt><code>docker images</code></dt><dd>Lists images stored on your machine.</dd>
+  <dt><code>image ls postgres</code></dt><dd>Same list, filtered to the <code class="i">postgres</code> repository.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output (sizes and IDs differ)">
+$ docker pull traefik/whoami:latest
+latest: Pulling from traefik/whoami
+Digest: sha256:4c3e5a1d...
+Status: Downloaded newer image for traefik/whoami:latest
+docker.io/traefik/whoami:latest
+$ docker images
+REPOSITORY                  TAG      IMAGE ID       CREATED        SIZE
+postgres                    latest   a1b2c3d4e5f6   2 weeks ago    435MB
+traefik/whoami              latest   b2c3d4e5f6a1   3 months ago   7.1MB
+jkaninda/simple-api         latest   c3d4e5f6a1b2   2 years ago    430MB
+ssatyab/studentmarkservice  latest   d4e5f6a1b2c3   1 year ago     400MB
+$ docker image ls postgres
+REPOSITORY   TAG      IMAGE ID       CREATED       SIZE
+postgres     latest   a1b2c3d4e5f6   2 weeks ago   435MB
+</script>
+</section>
+
+<!-- ============ Q9 ============ -->
+<section class="q" id="q9">
+<h2><span class="n">9.</span>PostgreSQL container, two whoami containers, and curl</h2>
+<h3>Task 1</h3>
+<p class="ask">Create a docker container with name "MyPostgresContainer". Set "POSTGRES_PASSWORD" environment variable to "abcd1234". Run the container on port 8844 and pull latest image of "traefik/whoami" into local machine.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker pull traefik/whoami:latest
+docker run -d --name MyPostgresContainer -e POSTGRES_PASSWORD=abcd1234 -p 8844:5432 postgres:latest
+docker ps
+docker logs MyPostgresContainer
+docker exec -it MyPostgresContainer psql -U postgres
+</script>
+<dl class="flags">
+  <dt><code>-d</code></dt><dd>Run in the background.</dd>
+  <dt><code>--name MyPostgresContainer</code></dt><dd>Container name (case-sensitive when you use it later).</dd>
+  <dt><code>-e KEY=VALUE</code></dt><dd>Sets an environment variable inside the container. Postgres refuses to start without <code class="i">POSTGRES_PASSWORD</code>. All options must come <em>before</em> the image name.</dd>
+  <dt><code>-p 8844:5432</code></dt><dd>Host port 8844 maps to Postgres's own port 5432 inside the container.</dd>
+  <dt><code>postgres:latest</code></dt><dd>The image. Docker pulls it automatically if it is missing.</dd>
+  <dt><code>psql -U postgres</code></dt><dd>Open the Postgres command-line client as user <code class="i">postgres</code>. Type <code class="i">\q</code> to quit.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ docker run -d --name MyPostgresContainer -e POSTGRES_PASSWORD=abcd1234 -p 8844:5432 postgres:latest
+Unable to find image 'postgres:latest' locally
+latest: Pulling from library/postgres
+Status: Downloaded newer image for postgres:latest
+1f8a6b3c9d2e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90
+$ docker ps
+CONTAINER ID   IMAGE             COMMAND                  CREATED         STATUS         PORTS                    NAMES
+1f8a6b3c9d2e   postgres:latest   "docker-entrypoint.s…"   8 seconds ago   Up 7 seconds   0.0.0.0:8844->5432/tcp   MyPostgresContainer
+$ docker logs MyPostgresContainer
+...
+PostgreSQL init process complete; ready for start up.
+2026-10-13 09:15:02.411 UTC [1] LOG:  database system is ready to accept connections
+$ docker exec -it MyPostgresContainer psql -U postgres
+psql (17.0 (Debian 17.0-1.pgdg120+1))
+Type "help" for help.
+
+postgres=#
+</script>
+
+<h3>Task 2</h3>
+<p class="ask">Run 2 containers on 2 different ports 8686 and 8787.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker run -d --name whoami1 -p 8686:80 traefik/whoami
+docker run -d --name whoami2 -p 8787:80 traefik/whoami
+docker ps
+</script>
+<dl class="flags">
+  <dt><code>-p 8686:80</code></dt><dd><code class="i">traefik/whoami</code> listens on port 80 inside the container. Each container needs a different <em>host</em> port, but both can use 80 inside.</dd>
+  <dt><code>--name</code></dt><dd>Two containers cannot share a name, so use whoami1 and whoami2.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ docker ps
+CONTAINER ID   IMAGE            COMMAND     CREATED          STATUS          PORTS                  NAMES
+8c2d1e4f5a6b   traefik/whoami   "/whoami"   5 seconds ago    Up 4 seconds    0.0.0.0:8787->80/tcp   whoami2
+5f2c8a1d9e3b   traefik/whoami   "/whoami"   12 seconds ago   Up 11 seconds   0.0.0.0:8686->80/tcp   whoami1
+</script>
+
+<h3>Task 3</h3>
+<p class="ask">Check following commands and write the differences: a) curl http://localhost:8686  b) curl http://localhost:8687</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+curl http://localhost:8686
+curl http://localhost:8687
+curl http://localhost:8787
+</script>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ curl http://localhost:8686
+Hostname: 5f2c8a1d9e3b
+IP: 127.0.0.1
+IP: 172.17.0.3
+RemoteAddr: 172.17.0.1:52814
+GET / HTTP/1.1
+Host: localhost:8686
+User-Agent: curl/8.4.0
+Accept: */*
+
+$ curl http://localhost:8687
+curl: (7) Failed to connect to localhost port 8687 after 2 ms: Could not connect to server
+$ curl http://localhost:8787
+Hostname: 8c2d1e4f5a6b
+IP: 127.0.0.1
+IP: 172.17.0.4
+RemoteAddr: 172.17.0.1:52930
+GET / HTTP/1.1
+Host: localhost:8787
+</script>
+<div class="tablewrap">
+<table>
+<tr><th>Command</th><th>Result</th><th>Reason</th></tr>
+<tr><td><code class="i">curl http://localhost:8686</code></td><td>Prints the whoami text: <code class="i">Hostname</code>, container IPs, <code class="i">GET / HTTP/1.1</code> and request headers.</td><td>Container <code class="i">whoami1</code> publishes host port 8686, so the request reaches it.</td></tr>
+<tr><td><code class="i">curl http://localhost:8687</code></td><td><code class="i">curl: (7) Failed to connect ... Connection refused</code></td><td>No container publishes 8687 (the second one uses 8787), so nothing is listening.</td></tr>
+</table>
+</div>
+<p><code class="i">curl http://localhost:8787</code> works too but shows a different <code class="i">Hostname</code> because it reaches the other container. To make (b) work: <code class="i">docker run -d --name whoami3 -p 8687:80 traefik/whoami</code>.</p>
+<h4>Clean up</h4>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker rm -f whoami1 whoami2 MyPostgresContainer
+</script>
+<p>Output: the three names are printed back, one per line.</p>
+</section>
+
+<!-- ============ Q10 ============ -->
+<section class="q" id="q10">
+<h2><span class="n">10.</span>HTTP verbs: GET, POST, DELETE, PUT</h2>
+<p class="ask">Explain following HTTP Verbs: GET, POST, DELETE, PUT.</p>
+<div class="tablewrap">
+<table>
+<tr><th>Verb</th><th>Purpose (CRUD)</th><th>Body</th><th>Safe</th><th>Idempotent</th><th>Typical success code</th><th>Example</th></tr>
+<tr><td><strong>GET</strong></td><td>Read a resource or a list (Read)</td><td>No</td><td>Yes</td><td>Yes</td><td>200 OK</td><td><code class="i">GET /students/1</code></td></tr>
+<tr><td><strong>POST</strong></td><td>Create a new resource (Create)</td><td>Yes</td><td>No</td><td>No: repeating it creates duplicates</td><td>201 Created</td><td><code class="i">POST /students</code></td></tr>
+<tr><td><strong>PUT</strong></td><td>Replace or update an existing resource in full (Update)</td><td>Yes</td><td>No</td><td>Yes: same request, same final state</td><td>200 OK or 204 No Content</td><td><code class="i">PUT /students/1</code></td></tr>
+<tr><td><strong>DELETE</strong></td><td>Remove a resource (Delete)</td><td>Usually no</td><td>No</td><td>Yes: after the first call it is already gone</td><td>200 OK or 204 No Content</td><td><code class="i">DELETE /students/1</code></td></tr>
+</table>
+</div>
+<p><em>Safe</em> means the call does not change data on the server. <em>Idempotent</em> means calling it many times leaves the server in the same state as calling it once. You will see all four working in Q11.</p>
+</section>
+
+<!-- ============ Q11 ============ -->
+<section class="q" id="q11">
+<h2><span class="n">11.</span>Express microservice on Kubernetes, tested with Postman</h2>
+<p class="ask">Write a Microservice to implement above operations for the following data structure Docker and orchestrate it using K8s and test Pod with Postman: { id: Integer, studentName: String, totalMarks: Integer }</p>
+<p>A Node.js Express REST API with an in-memory list, packaged as a Docker image, run on Kubernetes by a Deployment (keeps the pod running) and a Service (stable address for it).</p>
+
+<h3>Step 1: Create the project</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+mkdir student
+cd student
+npm init -y
+npm install express
+</script>
+<dl class="flags">
+  <dt><code>npm init -y</code></dt><dd>Creates <code class="i">package.json</code> with default answers (<code class="i">-y</code> means yes to every question).</dd>
+  <dt><code>npm install express</code></dt><dd>Downloads Express into <code class="i">node_modules</code> and records it in <code class="i">package.json</code>.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ npm init -y
+Wrote to C:\Users\you\student\package.json:
+
+{
+  "name": "student",
+  "version": "1.0.0",
+  "main": "index.js",
+  ...
+}
+$ npm install express
+
+added 65 packages, and audited 66 packages in 4s
+
+13 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+</script>
+
+<h3>Step 2: Write the service</h3>
+<script type="text/plain" data-code data-lang="js" data-title="index.js" data-tag="memorise">
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+let students = [];
+
+app.get('/students', (req, res) => res.json(students));
+
+app.get('/students/:id', (req, res) => {
+  const s = students.find(x => x.id == req.params.id);
+  s ? res.json(s) : res.status(404).send('Not found');
+});
+
+app.post('/students', (req, res) => {
+  students.push(req.body);
+  res.status(201).json(req.body);
+});
+
+app.put('/students/:id', (req, res) => {
+  const i = students.findIndex(x => x.id == req.params.id);
+  if (i < 0) return res.status(404).send('Not found');
+  students[i] = req.body;
+  res.json(students[i]);
+});
+
+app.delete('/students/:id', (req, res) => {
+  students = students.filter(x => x.id != req.params.id);
+  res.sendStatus(204);
+});
+
+app.listen(3000, () => console.log('Student service running on port 3000'));
+</script>
+<dl class="flags">
+  <dt><code>express.json()</code></dt><dd>Middleware that parses JSON request bodies into <code class="i">req.body</code>. Without it POST and PUT bodies are <code class="i">undefined</code>.</dd>
+  <dt><code>students</code></dt><dd>The in-memory "database": an array of <code class="i">{ id, studentName, totalMarks }</code>. It resets when the process restarts.</dd>
+  <dt><code>req.params.id</code></dt><dd>The <code class="i">:id</code> part of the URL, always a string, so <code class="i">==</code> is used to compare with the numeric <code class="i">id</code>.</dd>
+  <dt><code>res.status(201)</code></dt><dd>Sets the HTTP status. <code class="i">sendStatus(204)</code> sends status 204 with an empty body.</dd>
+  <dt><code>app.listen(3000)</code></dt><dd>Start the server on port 3000.</dd>
+</dl>
+
+<h3>Step 3: Run and test locally first</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal 1">
+node index.js
+</script>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal 2 (Git Bash or Linux/macOS)">
+curl -X POST http://localhost:3000/students -H "Content-Type: application/json" -d '{"id":1,"studentName":"Asha","totalMarks":450}'
+curl http://localhost:3000/students
+</script>
+<dl class="flags">
+  <dt><code>-X POST</code></dt><dd>Sets the HTTP method (GET is the default).</dd>
+  <dt><code>-H "..."</code></dt><dd>Adds a request header. <code class="i">Content-Type: application/json</code> tells Express the body is JSON.</dd>
+  <dt><code>-d '...'</code></dt><dd>The request body.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ node index.js
+Student service running on port 3000
+$ curl -X POST http://localhost:3000/students -H "Content-Type: application/json" -d '{"id":1,"studentName":"Asha","totalMarks":450}'
+{"id":1,"studentName":"Asha","totalMarks":450}
+$ curl http://localhost:3000/students
+[{"id":1,"studentName":"Asha","totalMarks":450}]
+</script>
+<div class="tip">In Windows PowerShell, <code class="i">curl</code> is an alias for another command. Use Git Bash, or just test with Postman. Stop the server with <kbd>Ctrl</kbd>+<kbd>C</kbd> before continuing.</div>
+
+<h3>Step 4: Dockerize</h3>
+<script type="text/plain" data-code data-lang="dockerfile" data-title="Dockerfile" data-tag="memorise">
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "index.js"]
+</script>
+<script type="text/plain" data-code data-lang="text" data-title=".dockerignore" data-tag="memorise">
+node_modules
+</script>
+<dl class="flags">
+  <dt><code>FROM node:20-alpine</code></dt><dd>Base image: Node 20 on small Alpine Linux.</dd>
+  <dt><code>WORKDIR /app</code></dt><dd>Working folder inside the image. Later commands run here.</dd>
+  <dt><code>COPY package*.json ./</code></dt><dd>Copy the dependency lists first so Docker can cache the next step.</dd>
+  <dt><code>RUN npm install</code></dt><dd>Runs at build time: installs dependencies into the image.</dd>
+  <dt><code>COPY . .</code></dt><dd>Copy the rest of your code into <code class="i">/app</code>.</dd>
+  <dt><code>EXPOSE 3000</code></dt><dd>Documents the port the app uses. It does not publish it; <code class="i">-p</code> does that.</dd>
+  <dt><code>CMD [...]</code></dt><dd>The command run when a container starts.</dd>
+  <dt><code>.dockerignore</code></dt><dd>Keeps your local <code class="i">node_modules</code> out of the image (the image installs its own).</dd>
+</dl>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker build -t student:1.0 .
+docker run -d --name student-test -p 3000:3000 student:1.0
+curl http://localhost:3000/students
+docker rm -f student-test
+</script>
+<dl class="flags">
+  <dt><code>docker build</code></dt><dd>Builds an image from the Dockerfile.</dd>
+  <dt><code>-t student:1.0</code></dt><dd>Tag (name and version) for the image. Use a version like <code class="i">1.0</code>, not <code class="i">latest</code>, so Kubernetes uses your local copy instead of trying to download it.</dd>
+  <dt><code>.</code></dt><dd>Build context: the current folder, where the Dockerfile is.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ docker build -t student:1.0 .
+[+] Building 14.2s (10/10) FINISHED
+ => [internal] load build definition from Dockerfile
+ => [1/5] FROM docker.io/library/node:20-alpine
+ => [2/5] WORKDIR /app
+ => [3/5] COPY package*.json ./
+ => [4/5] RUN npm install
+ => [5/5] COPY . .
+ => exporting to image
+ => => naming to docker.io/library/student:1.0
+$ docker run -d --name student-test -p 3000:3000 student:1.0
+3b9e5d7a1c2f4e6a8b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a
+$ curl http://localhost:3000/students
+[]
+$ docker rm -f student-test
+student-test
+</script>
+
+<h3>Step 5: Kubernetes files</h3>
+<script type="text/plain" data-code data-lang="yaml" data-title="deployment.yml" data-tag="memorise">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student
+spec:
+  selector:
+    matchLabels:
+      app: student
+  template:
+    metadata:
+      labels:
+        app: student
+    spec:
+      containers:
+      - name: student
+        image: student:1.0
+</script>
+<script type="text/plain" data-code data-lang="yaml" data-title="service.yml" data-tag="memorise">
+apiVersion: v1
+kind: Service
+metadata:
+  name: student
+spec:
+  selector:
+    app: student
+  ports:
+  - port: 80
+    targetPort: 3000
+</script>
+<dl class="flags">
+  <dt><code>apiVersion / kind</code></dt><dd>Deployment is <code class="i">apps/v1</code>. Service (and Pod, Namespace) is <code class="i">v1</code>.</dd>
+  <dt><code>app: student</code></dt><dd>A label. It must match in three places: <code class="i">selector.matchLabels</code> and <code class="i">template.metadata.labels</code> in the Deployment, and <code class="i">selector</code> in the Service. This is how the Service finds the pods.</dd>
+  <dt><code>image</code></dt><dd>The image to run. Replicas default to 1 and the container port is optional, so both are left out.</dd>
+  <dt><code>port: 80</code></dt><dd>The port the Service listens on.</dd>
+  <dt><code>targetPort: 3000</code></dt><dd>The port the container listens on (Express uses 3000).</dd>
+</dl>
+<div class="tip">Forgot the YAML in the exam? Generate it: <code class="i">kubectl create deployment student --image=student:1.0 --dry-run=client -o yaml &gt; deployment.yml</code> (see Q13).</div>
+
+<h3>Step 6: Deploy</h3>
+<p><strong>Docker Desktop Kubernetes:</strong> it can use the image you just built, nothing else to do. <strong>minikube:</strong> run <code class="i">minikube image load student:1.0</code> first. <strong>Any other cluster:</strong> push the image to Docker Hub (<code class="i">docker tag student:1.0 YOUR_USER/student:1.0</code>, <code class="i">docker push YOUR_USER/student:1.0</code>) and change the <code class="i">image:</code> line.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl apply -f deployment.yml
+kubectl apply -f service.yml
+kubectl get pods
+kubectl get all
+kubectl logs deploy/student
+kubectl port-forward svc/student 8080:80
+</script>
+<dl class="flags">
+  <dt><code>apply -f file</code></dt><dd>Create or update the objects described in the file.</dd>
+  <dt><code>get pods</code></dt><dd>Lists pods. Wait until <code class="i">READY</code> is <code class="i">1/1</code> and <code class="i">STATUS</code> is <code class="i">Running</code>.</dd>
+  <dt><code>get all</code></dt><dd>Lists pods, services, deployments and replica sets in the namespace.</dd>
+  <dt><code>logs deploy/student</code></dt><dd>Shows the output of a pod of that Deployment.</dd>
+  <dt><code>port-forward svc/student 8080:80</code></dt><dd>Forward <code class="i">localhost:8080</code> on your machine to port 80 of the Service. Keep this terminal open while using Postman.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ kubectl apply -f deployment.yml
+deployment.apps/student created
+$ kubectl apply -f service.yml
+service/student created
+$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+student-6d9f7c5b8d-x2k4q   1/1     Running   0          15s
+$ kubectl get all
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/student-6d9f7c5b8d-x2k4q   1/1     Running   0          40s
+
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1      <none>        443/TCP   2d
+service/student      ClusterIP   10.101.23.45   <none>        80/TCP    40s
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/student   1/1     1            1           40s
+
+NAME                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/student-6d9f7c5b8d   1         1         1       40s
+$ kubectl logs deploy/student
+Student service running on port 3000
+$ kubectl port-forward svc/student 8080:80
+Forwarding from 127.0.0.1:8080 -> 3000
+Forwarding from [::1]:8080 -> 3000
+</script>
+<div class="warn">If <code class="i">STATUS</code> is <code class="i">ErrImagePull</code> or <code class="i">ImagePullBackOff</code>, the cluster cannot find the image. Run <code class="i">kubectl describe pod &lt;pod-name&gt;</code> and read the <em>Events</em> at the bottom. Fix it with the image options at the start of this step.</div>
+
+<h3>Step 7: Test in Postman</h3>
+<p>Click <em>New</em>, then <em>HTTP</em>. Choose the method, type the URL, and for POST and PUT open <em>Body</em>, select <em>raw</em>, change the type dropdown from Text to <em>JSON</em>, paste the JSON, then click <em>Send</em>. Base URL: <code class="i">http://localhost:8080</code>.</p>
+<script type="text/plain" data-code data-lang="json" data-title="Body for POST and PUT">
+{
+  "id": 1,
+  "studentName": "Asha",
+  "totalMarks": 450
+}
+</script>
+<div class="tablewrap">
+<table>
+<tr><th>Request</th><th>Body</th><th>Expected status</th><th>Expected response</th></tr>
+<tr><td><code class="i">POST /students</code></td><td>JSON above</td><td>201 Created</td><td><code class="i">{"id":1,"studentName":"Asha","totalMarks":450}</code></td></tr>
+<tr><td><code class="i">GET /students</code></td><td>none</td><td>200 OK</td><td><code class="i">[{"id":1,"studentName":"Asha","totalMarks":450}]</code></td></tr>
+<tr><td><code class="i">GET /students/1</code></td><td>none</td><td>200 OK</td><td>The single student object</td></tr>
+<tr><td><code class="i">PUT /students/1</code></td><td>Same JSON with <code class="i">"totalMarks": 480</code></td><td>200 OK</td><td>Updated object with 480</td></tr>
+<tr><td><code class="i">DELETE /students/1</code></td><td>none</td><td>204 No Content</td><td>Empty body</td></tr>
+<tr><td><code class="i">GET /students/1</code> (after delete)</td><td>none</td><td>404 Not Found</td><td><code class="i">Not found</code></td></tr>
+</table>
+</div>
+<p>For PUT send the whole object, including <code class="i">id</code>. Data lives in memory, so deleting the pod (or a restart) empties the list.</p>
+<h4>Clean up</h4>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl delete -f deployment.yml
+kubectl delete -f service.yml
+</script>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ kubectl delete -f deployment.yml
+deployment.apps "student" deleted
+$ kubectl delete -f service.yml
+service "student" deleted
+</script>
+</section>
+
+<!-- ============ Q12 ============ -->
+<section class="q" id="q12">
+<h2><span class="n">12.</span>Create a Docker container using a Dockerfile, then run simple-api with Compose</h2>
+<p class="ask">Explain the process of creating a Docker Container using Dockerfile. 1. Pull latest image of "jkaninda/simple-api" 2. Download "jkaninda-simple-api-docker-compose" file 3. Run "docker compose -f jkaninda-simple-api-docker-compose up -d" 4. Test using Postman: GET "/" and GET "/books".</p>
+
+<div class="tip"><strong>Is simple-api Spring Boot?</strong> Yes. Its Docker Hub description says it is a REST API with a Redis database, built with Spring Boot, for learning Docker and Kubernetes. That matters in two ways: it is a Java app listening on 8080, and the compose file you download will probably start a Redis container beside it. <strong>You do not memorise anything for steps 1 to 4.</strong> The compose file is given to you. Only if the question asks you to <em>explain the Dockerfile process</em>, use the 4-line Spring Boot Dockerfile below.</div>
+
+<h3>Process of creating a container with a Dockerfile</h3>
+<ol>
+  <li>Write a <code class="i">Dockerfile</code> (instructions: base image, files, port, start command).</li>
+  <li>Build an image from it with <code class="i">docker build</code>.</li>
+  <li>Start a container from that image with <code class="i">docker run</code>.</li>
+</ol>
+<script type="text/plain" data-code data-lang="dockerfile" data-title="Dockerfile for a Spring Boot jar" data-tag="memorise">
+FROM eclipse-temurin:17-jre
+COPY target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+</script>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal (only if you have the Spring Boot project)">
+mvn clean package
+docker build -t simple-api-demo:1.0 .
+docker run -d --name simple-api-demo -p 8080:8080 simple-api-demo:1.0
+</script>
+<dl class="flags">
+  <dt><code>FROM eclipse-temurin:17-jre</code></dt><dd>Base image with a Java 17 runtime.</dd>
+  <dt><code>COPY target/*.jar app.jar</code></dt><dd>Copy the jar that Maven built into the image as <code class="i">app.jar</code>.</dd>
+  <dt><code>EXPOSE 8080</code></dt><dd>Documents Spring Boot's default port. Optional: the image runs without it.</dd>
+  <dt><code>ENTRYPOINT [...]</code></dt><dd>The command that starts the app: <code class="i">java -jar app.jar</code>.</dd>
+  <dt><code>mvn clean package</code></dt><dd>Builds the project and creates the jar in <code class="i">target/</code>.</dd>
+  <dt><code>-t simple-api-demo:1.0</code></dt><dd>Name and tag for the image. <code class="i">.</code> is the build context.</dd>
+  <dt><code>-p 8080:8080</code></dt><dd>Host port : container port.</dd>
+</dl>
+
+<h3>The lab steps</h3>
+<h4>1. Pull the image</h4>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+docker pull jkaninda/simple-api:latest
+</script>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ docker pull jkaninda/simple-api:latest
+latest: Pulling from jkaninda/simple-api
+Digest: sha256:795c1337f4e0...
+Status: Downloaded newer image for jkaninda/simple-api:latest
+docker.io/jkaninda/simple-api:latest
+</script>
+<h4>2. Download the compose file</h4>
+<p>Open the shortened link from the question in a browser and save the file in a new folder as <code class="i">jkaninda-simple-api-docker-compose.yml</code>. Open a terminal in that folder.</p>
+<h4>3. Run it</h4>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal" data-tag="">
+docker compose -f jkaninda-simple-api-docker-compose.yml up -d
+docker compose -f jkaninda-simple-api-docker-compose.yml ps
+docker compose -f jkaninda-simple-api-docker-compose.yml logs
+docker compose -f jkaninda-simple-api-docker-compose.yml down
+</script>
+<dl class="flags">
+  <dt><code>compose</code></dt><dd>The Docker Compose plugin (older installs use the separate <code class="i">docker-compose</code> command).</dd>
+  <dt><code>-f file</code></dt><dd>Use this compose file instead of the default <code class="i">docker-compose.yml</code>. The name must match what you saved, including <code class="i">.yml</code>.</dd>
+  <dt><code>up</code></dt><dd>Create the network and containers described in the file and start them.</dd>
+  <dt><code>-d</code></dt><dd>Detached, background.</dd>
+  <dt><code>ps</code></dt><dd>Lists the containers of this compose project. Check the <code class="i">PORTS</code> column for the host port to use in Postman.</dd>
+  <dt><code>logs</code></dt><dd>Shows the output of the project's containers.</dd>
+  <dt><code>down</code></dt><dd>Stops and removes the containers and the network (run it when you are finished).</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output (container names and ports depend on the file)">
+$ docker compose -f jkaninda-simple-api-docker-compose.yml up -d
+[+] Running 3/3
+ ✔ Network simple-api_default   Created
+ ✔ Container redis              Started
+ ✔ Container simple-api         Started
+$ docker compose -f jkaninda-simple-api-docker-compose.yml ps
+NAME         IMAGE                        COMMAND                  SERVICE      STATUS         PORTS
+redis        redis:latest                 "docker-entrypoint.s…"   redis        Up 5 seconds   6379/tcp
+simple-api   jkaninda/simple-api:latest   "java -jar app.jar"      simple-api   Up 5 seconds   0.0.0.0:8080->8080/tcp
+</script>
+<h4>4. Test with Postman</h4>
+<script type="text/plain" data-code data-lang="http" data-title="Requests (use the host port from the PORTS column)">
+GET http://localhost:8080/
+GET http://localhost:8080/books
+</script>
+<ul>
+  <li><code class="i">GET /</code>: status <code class="i">200 OK</code> with a short JSON greeting. The project's documentation shows a message like "Hello from Simple API, everything is ok".</li>
+  <li><code class="i">GET /books</code>: status <code class="i">200 OK</code> with a JSON array of books.</li>
+</ul>
+<p>If Postman says <em>Could not get response</em>, run <code class="i">docker compose ... ps</code> to confirm the container is <code class="i">Up</code> and the port matches.</p>
+</section>
+
+<!-- ============ Q13 ============ -->
+<section class="q" id="q13">
+<h2><span class="n">13.</span>Kubernetes commands for Deployments, Services and Pods, plus Question 9B</h2>
+<p class="ask">Write commands for creating Deployment, Services &amp; Pods in K8s. Question 9B: Create a k8s service pod and test using the postman: 1. Pull the image from hub.docker.com/r/ssatyab/studentmarkservice 2. Download namespace.yml, deployment.yml, service.yml.</p>
+<ul>
+  <li><strong>Pod</strong>: the smallest unit; one or more containers sharing network and storage.</li>
+  <li><strong>Deployment</strong>: keeps the wanted number of identical pods running and handles updates.</li>
+  <li><strong>Service</strong>: a stable address and load balancer in front of pods, selected by labels.</li>
+</ul>
+
+<h3>Create with commands (no YAML needed)</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl create namespace demo-ns
+kubectl run my-pod --image=nginx --port=80 -n demo-ns
+kubectl create deployment my-deploy --image=nginx --replicas=3 -n demo-ns
+kubectl expose deployment my-deploy --name=my-svc --port=80 --target-port=80 --type=NodePort -n demo-ns
+
+kubectl get pods -n demo-ns
+kubectl get deployments -n demo-ns
+kubectl get svc -n demo-ns
+</script>
+<dl class="flags">
+  <dt><code>create namespace</code></dt><dd>A namespace is a named group of resources, like a folder.</dd>
+  <dt><code>run my-pod</code></dt><dd>Creates a single Pod. <code class="i">--image</code> is the container image, <code class="i">--port</code> the container port.</dd>
+  <dt><code>create deployment</code></dt><dd>Creates a Deployment. <code class="i">--replicas=3</code> means keep 3 pods running.</dd>
+  <dt><code>expose deployment</code></dt><dd>Creates a Service for it. <code class="i">--port</code> is the Service port, <code class="i">--target-port</code> the container port, <code class="i">--name</code> the Service name.</dd>
+  <dt><code>--type=NodePort</code></dt><dd>Also opens a high port (30000 to 32767) on the node. Default is <code class="i">ClusterIP</code> (reachable only inside the cluster).</dd>
+  <dt><code>-n demo-ns</code></dt><dd>Run the command in that namespace. Without it, the <code class="i">default</code> namespace is used.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ kubectl create namespace demo-ns
+namespace/demo-ns created
+$ kubectl run my-pod --image=nginx --port=80 -n demo-ns
+pod/my-pod created
+$ kubectl create deployment my-deploy --image=nginx --replicas=3 -n demo-ns
+deployment.apps/my-deploy created
+$ kubectl expose deployment my-deploy --name=my-svc --port=80 --target-port=80 --type=NodePort -n demo-ns
+service/my-svc exposed
+$ kubectl get pods -n demo-ns
+NAME                        READY   STATUS    RESTARTS   AGE
+my-deploy-7c9d8f6b5-4hq2z   1/1     Running   0          20s
+my-deploy-7c9d8f6b5-m8x7p   1/1     Running   0          20s
+my-deploy-7c9d8f6b5-tz5vw   1/1     Running   0          20s
+my-pod                      1/1     Running   0          45s
+$ kubectl get deployments -n demo-ns
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+my-deploy   3/3     3            3           30s
+$ kubectl get svc -n demo-ns
+NAME     TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+my-svc   NodePort   10.98.12.34   <none>        80:31523/TCP   10s
+</script>
+
+<h3>Inspect, scale, update, delete</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl describe pod my-pod -n demo-ns
+kubectl logs my-pod -n demo-ns
+kubectl scale deployment my-deploy --replicas=5 -n demo-ns
+kubectl set image deployment/my-deploy nginx=nginx:1.27 -n demo-ns
+kubectl rollout status deployment/my-deploy -n demo-ns
+kubectl rollout undo deployment/my-deploy -n demo-ns
+kubectl delete pod my-pod -n demo-ns
+kubectl delete namespace demo-ns
+</script>
+<dl class="flags">
+  <dt><code>describe</code></dt><dd>Detailed info about one object. The <em>Events</em> section at the end explains most errors.</dd>
+  <dt><code>logs</code></dt><dd>Output of the container in the pod.</dd>
+  <dt><code>scale --replicas=5</code></dt><dd>Change the number of pods of a Deployment.</dd>
+  <dt><code>set image deploy/x nginx=nginx:1.27</code></dt><dd>Rolling update: <code class="i">container-name=new-image</code>. The container name is <code class="i">nginx</code> because <code class="i">create deployment</code> names it after the image.</dd>
+  <dt><code>rollout status / undo</code></dt><dd>Watch a rollout, or go back to the previous version.</dd>
+  <dt><code>delete namespace</code></dt><dd>Deletes the namespace and everything inside it.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output (describe shortened)">
+$ kubectl describe pod my-pod -n demo-ns
+Name:             my-pod
+Namespace:        demo-ns
+Node:             docker-desktop/192.168.65.3
+Status:           Running
+IP:               10.1.0.15
+Containers:
+  my-pod:
+    Image:          nginx
+    Port:           80/TCP
+...
+Events:
+  Normal  Scheduled  30s  default-scheduler  Successfully assigned demo-ns/my-pod to docker-desktop
+  Normal  Pulled     29s  kubelet            Successfully pulled image "nginx"
+  Normal  Started    28s  kubelet            Started container my-pod
+$ kubectl logs my-pod -n demo-ns
+/docker-entrypoint.sh: Configuration complete; ready for start up
+$ kubectl scale deployment my-deploy --replicas=5 -n demo-ns
+deployment.apps/my-deploy scaled
+$ kubectl set image deployment/my-deploy nginx=nginx:1.27 -n demo-ns
+deployment.apps/my-deploy image updated
+$ kubectl rollout status deployment/my-deploy -n demo-ns
+Waiting for deployment "my-deploy" rollout to finish: 2 out of 5 new replicas have been updated...
+deployment "my-deploy" successfully rolled out
+$ kubectl rollout undo deployment/my-deploy -n demo-ns
+deployment.apps/my-deploy rolled back
+$ kubectl delete pod my-pod -n demo-ns
+pod "my-pod" deleted
+$ kubectl delete namespace demo-ns
+namespace "demo-ns" deleted
+</script>
+
+<h3>Create with YAML (Pod, bare minimum)</h3>
+<script type="text/plain" data-code data-lang="yaml" data-title="pod.yml" data-tag="memorise">
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+</script>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl apply -f pod.yml
+kubectl get pods
+kubectl delete -f pod.yml
+</script>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ kubectl apply -f pod.yml
+pod/my-pod created
+$ kubectl get pods
+NAME     READY   STATUS    RESTARTS   AGE
+my-pod   1/1     Running   0          12s
+$ kubectl delete -f pod.yml
+pod "my-pod" deleted
+</script>
+<p>No namespace is given, so this pod goes into <code class="i">default</code>. Deployment and Service YAML are in Q11.</p>
+
+<h3>Generate YAML instead of memorising it</h3>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl run my-pod --image=nginx --dry-run=client -o yaml > pod.yml
+kubectl create deployment my-deploy --image=nginx --dry-run=client -o yaml > deployment.yml
+kubectl create service clusterip my-svc --tcp=80:80 --dry-run=client -o yaml > service.yml
+</script>
+<dl class="flags">
+  <dt><code>--dry-run=client</code></dt><dd>Build the object locally and do not create anything on the cluster.</dd>
+  <dt><code>-o yaml</code></dt><dd>Print it as YAML.</dd>
+  <dt><code>&gt; file.yml</code></dt><dd>Save the printed YAML into a file. Then use <code class="i">kubectl apply -f</code> as usual. Extra lines such as <code class="i">creationTimestamp: null</code> and <code class="i">status: {}</code> are harmless.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="yaml" data-title="Expected content of deployment.yml (generated)">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: my-deploy
+  name: my-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: my-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+</script>
+
+<h3>Question 9B: studentmarkservice, namespace, deployment and service</h3>
+<p>All three YAML files are downloaded, so nothing to memorise. The order matters: the namespace must exist before the other two files can be applied.</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal" data-tag="">
+docker pull ssatyab/studentmarkservice:latest
+
+kubectl apply -f namespace.yml
+kubectl apply -f deployment.yml
+kubectl apply -f service.yml
+
+kubectl get ns
+kubectl get pods -A
+kubectl get svc -A
+</script>
+<dl class="flags">
+  <dt><code>docker pull</code></dt><dd>Downloads the image so the cluster can start it.</dd>
+  <dt><code>apply -f</code></dt><dd>Run the three files one by one. Do not use <code class="i">kubectl apply -f .</code>: it applies files alphabetically, so <code class="i">deployment.yml</code> would run before <code class="i">namespace.yml</code> and fail with "namespace not found".</dd>
+  <dt><code>-A</code></dt><dd>All namespaces. Lets you find the new pod and service without knowing the namespace name used in the file.</dd>
+</dl>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output (names come from the downloaded files)">
+$ kubectl apply -f namespace.yml
+namespace/<namespace-name> created
+$ kubectl apply -f deployment.yml
+deployment.apps/<deployment-name> created
+$ kubectl apply -f service.yml
+service/<service-name> created
+$ kubectl get pods -A
+NAMESPACE          NAME                              READY   STATUS    RESTARTS   AGE
+<namespace-name>   <deployment-name>-5b7c9d8f6-abcde  1/1     Running   0          25s
+kube-system        coredns-...                       1/1     Running   0          2d
+</script>
+<h4>Reach the service and test in Postman</h4>
+<p>Look at the <code class="i">service.yml</code> you downloaded. If the Service type is <code class="i">NodePort</code>, the URL is <code class="i">http://localhost:&lt;nodePort&gt;</code> on Docker Desktop (for minikube run <code class="i">minikube service &lt;service-name&gt; -n &lt;namespace&gt; --url</code>). Otherwise forward a port:</p>
+<script type="text/plain" data-code data-lang="bash" data-title="Terminal">
+kubectl port-forward svc/<service-name> 8080:<service-port> -n <namespace-name>
+</script>
+<script type="text/plain" data-code data-lang="term" data-title="Expected output">
+$ kubectl port-forward svc/<service-name> 8080:<service-port> -n <namespace-name>
+Forwarding from 127.0.0.1:8080 -> <container-port>
+Forwarding from [::1]:8080 -> <container-port>
+</script>
+<p>Then in Postman call <code class="i">http://localhost:8080/</code> plus the endpoints the service provides. I could not find the studentmarkservice page, so I can't tell you its exact paths: check its Docker Hub page, or the pod logs (<code class="i">kubectl logs &lt;pod-name&gt; -n &lt;namespace-name&gt;</code>). Because the sheet describes a <code class="i">{id, studentName, totalMarks}</code> record, the paths will be along the lines of the table in Q11. A <code class="i">200 OK</code> JSON response means the pod and service work.</p>
+<div class="warn">Pod stuck in <code class="i">ImagePullBackOff</code> or <code class="i">CrashLoopBackOff</code>? Run <code class="i">kubectl describe pod &lt;pod-name&gt; -n &lt;namespace-name&gt;</code> (read <em>Events</em>) and <code class="i">kubectl logs &lt;pod-name&gt; -n &lt;namespace-name&gt;</code>.</div>
+</section>
+</main>
+</div>
+
+<script>
+/* ---------- Theme toggle ---------- */
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  var saved=null;
+  try{saved=localStorage.getItem('theme');}catch(e){}
+  var dark = saved ? saved==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  function apply(){
+    root.setAttribute('data-theme', dark?'dark':'light');
+    btn.textContent = dark ? 'Light mode' : 'Dark mode';
+  }
+  apply();
+  btn.addEventListener('click',function(){
+    dark=!dark; apply();
+    try{localStorage.setItem('theme',dark?'dark':'light');}catch(e){}
+  });
+})();
+
+/* ---------- Tiny syntax highlighter ---------- */
+(function(){
+  var DQ=/"(?:[^"\\\n]|\\.)*"/.source, SQ=/'[^'\n]*'/.source;
+  var LANGS={
+    bash:[['c',/#.*/],['s',new RegExp(DQ+'|'+SQ)],['u',/https?:\/\/[^\s"']+/],
+      ['f',/(?<=\s)--?[A-Za-z][\w-]*/],
+      ['k',/\b(?:git|docker|compose|kubectl|curl|mkdir|cd|echo|cat|touch|ls|mvn|java|minikube|psql|bash|node|npm)\b/],
+      ['n',/\b\d+(?:\.\d+)*\b/]],
+    yaml:[['c',/#.*/],['s',new RegExp(DQ+'|'+SQ)],['a',/[\w.\/-]+(?=:(?:\s|$))/],
+      ['k',/\b(?:true|false|null)\b/],['n',/\b\d+\b/]],
+    js:[['c',/\/\/.*/],['s',new RegExp(DQ+'|'+SQ+'|`[^`]*`')],
+      ['k',/\b(?:const|let|var|require|function|return|if|else|new|true|false|null)\b/],['n',/\b\d+\b/]],
+    json:[['a',/"(?:[^"\\]|\\.)*"(?=\s*:)/],['s',new RegExp(DQ)],['k',/\b(?:true|false|null)\b/],['n',/-?\b\d+(?:\.\d+)?\b/]],
+    dockerfile:[['c',/#.*/],['k',/^(?:FROM|RUN|CMD|COPY|ADD|WORKDIR|EXPOSE|ENV|ENTRYPOINT|ARG|USER|VOLUME)\b|\bAS\b/m],
+      ['s',new RegExp(DQ)],['f',/(?<=\s)--?[A-Za-z][\w-]*/],['n',/\b\d+(?:\.\d+)*\b/]],
+    http:[['k',/^(?:GET|POST|PUT|DELETE|PATCH)\b/m],['u',/https?:\/\/\S+/]],
+    term:[['a',/^\$ .*/m]]
+  };
+  function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function highlight(code,lang){
+    var rules=LANGS[lang];
+    if(!rules) return esc(code);
+    var re=new RegExp(rules.map(function(r){return '('+r[1].source+')';}).join('|'),'gm');
+    var out='', last=0, m;
+    while((m=re.exec(code))){
+      if(m[0].length===0){re.lastIndex++;continue;}
+      var cls=null;
+      for(var i=1;i<=rules.length;i++){ if(m[i]!==undefined){cls=rules[i-1][0];break;} }
+      out+=esc(code.slice(last,m.index))+'<span class="tk-'+cls+'">'+esc(m[0])+'</span>';
+      last=m.index+m[0].length;
+    }
+    return out+esc(code.slice(last));
+  }
+  document.querySelectorAll('script[data-code]').forEach(function(el){
+    var lang=el.dataset.lang, title=el.dataset.title||lang, tag=el.dataset.tag;
+    var code=el.textContent.replace(/^\n/,'').replace(/\s+$/,'');
+    var box=document.createElement('div'); box.className='codebox'+(lang==='term'?' out':'');
+    var bar=document.createElement('div'); bar.className='codebar';
+    var left=document.createElement('span'); left.className='l';
+    var label=document.createElement('span'); label.textContent=title; left.appendChild(label);
+    if(tag){var p=document.createElement('span'); p.className='pill mem'; p.textContent=tag; left.appendChild(p);}
+    var copy=document.createElement('button'); copy.type='button'; copy.textContent='Copy';
+    copy.addEventListener('click',function(){
+      function done(){copy.textContent='Copied'; setTimeout(function(){copy.textContent='Copy';},1500);}
+      function fallback(){
+        var ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta);
+        ta.select(); try{document.execCommand('copy'); done();}catch(e){} document.body.removeChild(ta);
+      }
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(code).then(done,fallback);
+      } else fallback();
+    });
+    bar.appendChild(left); if(lang!=='term') bar.appendChild(copy);
+    var pre=document.createElement('pre'); var c=document.createElement('code');
+    c.innerHTML=highlight(code,lang); pre.appendChild(c);
+    box.appendChild(bar); box.appendChild(pre);
+    el.parentNode.replaceChild(box,el);
+  });
+})();
+</script>
+</body>
+</html>
